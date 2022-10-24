@@ -23,6 +23,7 @@ private: // エイリアス
 
 private: // 静的メンバ変数
 	static const int debugTextTexNumber = 0;
+	static const int grassCount = 50;
 
 public: // メンバ関数
 
@@ -60,6 +61,6 @@ private: // メンバ変数
 	/// ゲームシーン用
 	/// </summary>
 	Sprite* spriteBG = nullptr;
-	Object3d* object3d = nullptr;
+	Object3d* object3d[grassCount];
 };
 
