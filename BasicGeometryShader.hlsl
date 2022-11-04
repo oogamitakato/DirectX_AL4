@@ -9,7 +9,7 @@ void main(
 	for (uint i = 0; i < 3; i++)
 	{
 		GSOutput element;
-		element.pos = input[i].svpos;
+		element.svpos = input[i].svpos;
 		element.normal = input[i].normal;
 		element.uv = input[i].uv
 		output.Append(element);
