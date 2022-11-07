@@ -50,7 +50,7 @@ void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
 		randNumZ[i] = rand() % 40 - 20;
 
 		object3d[i] = Object3d::Create();
-		object3d[i]->SetPosition({randNumX[i],0,randNumZ[i]});
+		//object3d[i]->SetPosition({randNumX[i],0,randNumZ[i]});
 		object3d[i]->Update();
 	}
 }
@@ -119,8 +119,10 @@ void GameScene::Draw()
 	// 3Dオブクジェクトの描画
 	for (int i = 0; i < grassCount; i++)
 	{
-		object3d[i]->Draw();
+		//object3d[i]->Draw();
 	}
+
+	object3d[0]->Draw();
 
 	/// <summary>
 	/// ここに3Dオブジェクトの描画処理を追加できる
