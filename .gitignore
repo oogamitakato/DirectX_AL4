@@ -75,7 +75,7 @@ StyleCopReport.xml
 *_h.h
 *.ilk
 *.meta
-# *.obj
+$ git rm -r --cached [.obj]
 *.iobj
 *.pch
 *.pdb
