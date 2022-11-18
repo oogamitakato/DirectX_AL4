@@ -73,7 +73,7 @@ void GameScene::Update()
 	}
 
 	//スプライト移動
-	if (input->PushKey(DIK_SPACE)) {
+	if (input->PushKey(DIK_Q)) {
 		//現在の座標を取得
 		XMFLOAT2 position = sprite1->GetPosition();
 		//移動後の座標を計算
