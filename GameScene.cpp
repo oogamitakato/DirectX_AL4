@@ -13,10 +13,7 @@ GameScene::~GameScene()
 {
 	delete spriteBG;
 	delete particleMan;
-	for (int i = 0; i < grassCount; i++)
-	{
-		//delete object3d[i];
-	}
+
 }
 
 void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
@@ -60,6 +57,29 @@ void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
 
 void GameScene::Update()
 {
+	for (int i = 0; i < 2; i++) {
+		//X,Y,Z全てランダムに分布
+		const float rnd_width = 10.0f;
+		XMFLOAT3 pos{};
+		pos.x = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
+		pos.y = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
+		pos.z = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
+		//X,Y,Z全てランダムに分布
+		const float rnd_vel = 0.01f;
+		XMFLOAT3 vel{};
+		vel.x = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+		vel.y = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+		vel.z = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+		//重力に見立ててYのみランダムに分布
+		XMFLOAT3 acc{};
+		const float rnd_acc = 0.01f;
+		acc.y = -(float)rand() / RAND_MAX * rnd_acc;
+
+		//追加
+		particleMan->Add(60, pos, vel, acc);
+	}
+
+
 	// オブジェクト移動
 	if (input->PushKey(DIK_UP) || input->PushKey(DIK_DOWN) || input->PushKey(DIK_RIGHT) || input->PushKey(DIK_LEFT))
 	{

@@ -36,6 +36,16 @@ ParticleManager::VertexPos ParticleManager::vertices[vertexCount];
 XMMATRIX ParticleManager::matBillboard = XMMatrixIdentity();
 XMMATRIX ParticleManager::matBillboardY = XMMatrixIdentity();
 
+const DirectX::XMFLOAT3 operator+(const DirectX::XMFLOAT3& lhs, const DirectX::XMFLOAT3& rhs)
+{
+	XMFLOAT3 result;
+	result.x = lhs.x + rhs.x;
+	result.y = lhs.y + rhs.y;
+	result.z = lhs.z + rhs.z;
+
+	return result;
+}
+
 void ParticleManager::StaticInitialize(ID3D12Device * device, int window_width, int window_height)
 {
 	// nullptrチェック
@@ -300,13 +310,23 @@ void ParticleManager::InitializeGraphicsPipeline()
 	D3D12_RENDER_TARGET_BLEND_DESC blenddesc{};
 	blenddesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;	// RBGA全てのチャンネルを描画
 	blenddesc.BlendEnable = true;
-	blenddesc.BlendOp = D3D12_BLEND_OP_ADD;
-	blenddesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blenddesc.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	//blenddesc.BlendOp = D3D12_BLEND_OP_ADD;
+	//blenddesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	//blenddesc.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
 
+	//半透明合成
 	blenddesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;
 	blenddesc.SrcBlendAlpha = D3D12_BLEND_ONE;
 	blenddesc.DestBlendAlpha = D3D12_BLEND_ZERO;
+
+	//加算,減算合成
+	blenddesc.BlendOp = D3D12_BLEND_OP_ADD;
+	//blenddesc.BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
+	blenddesc.SrcBlend = D3D12_BLEND_ONE;
+	blenddesc.DestBlend = D3D12_BLEND_ONE;
+
+	//デプスの書き込みを禁止
+	gpipeline.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 
 	// ブレンドステートの設定
 	gpipeline.BlendState.RenderTarget[0] = blenddesc;
@@ -365,7 +385,7 @@ void ParticleManager::LoadTexture()
 	ScratchImage scratchImg{};
 
 	// WICテクスチャのロード
-	result = LoadFromWICFile( L"Resources/texture.png", WIC_FLAGS_NONE, &metadata, scratchImg);
+	result = LoadFromWICFile( L"Resources/effect1.png", WIC_FLAGS_NONE, &metadata, scratchImg);
 	assert(SUCCEEDED(result));
 
 	ScratchImage mipChain{};
@@ -432,30 +452,6 @@ void ParticleManager::LoadTexture()
 void ParticleManager::CreateModel()
 {
 	HRESULT result = S_FALSE;
-
-	////四角形の頂点データ
-	//VertexPosNormalUv verticesSquare[] = {
-	//	{{-5.0f,-5.0f,0.0f},{0,0,1},{0,1}},//左下
-	//	{{-5.0f,+5.0f,0.0f},{0,0,1},{0,0}},//左上
-	//	{{+5.0f,-5.0f,0.0f},{0,0,1},{1,1}},//右上
-	//	{{+5.0f,+5.0f,0.0f},{0,0,1},{1,0}},//右下
-	//};
-
-	//メンバ変数にコピー
-	//std::copy(std::begin(verticesSquare), std::end(verticesSquare), vertices);
-
-	//VertexPos verticesPoint[] = {
-	//	//{{0.0f,0.0f,0.0f},{0,0,1},{0,1}},
-	//	{{0.0f,0.0f,0.0f}}
-	//};
-	//std::copy(std::begin(verticesPoint), std::end(verticesPoint), vertices);
-	for (int i = 0; i < vertexCount; i++) {
-		//X,Y,Z全て[-5.0f,+5.0f]でランダムに分布
-		const float rnd_width = 10.0f;
-		vertices[i].pos.x = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
-		vertices[i].pos.y = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
-		vertices[i].pos.z = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
-	}
 
 	//四角形のインデックスデータ
 	unsigned short indicesSquare[] = {
@@ -635,34 +631,68 @@ void ParticleManager::Update()
 	HRESULT result;
 	XMMATRIX matScale, matRot, matTrans;
 
-	// スケール、回転、平行移動行列の計算
-	/*matScale = XMMatrixScaling(scale.x, scale.y, scale.z);
-	matRot = XMMatrixIdentity();
-	matRot *= XMMatrixRotationZ(XMConvertToRadians(rotation.z));
-	matRot *= XMMatrixRotationX(XMConvertToRadians(rotation.x));
-	matRot *= XMMatrixRotationY(XMConvertToRadians(rotation.y));
-	matTrans = XMMatrixTranslation(position.x, position.y, position.z);*/
 
-	// ワールド行列の合成
-	//matWorld = XMMatrixIdentity(); // 変形をリセット
+	//for (int i = 0; i < 100; i++) {
+	//	//X,Y,Z全て[-5.0f,+5.0f]でランダムに分布
+	//	const float rnd_width = 10.0f;
+	//	XMFLOAT3 pos{};
+	//	pos.x = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
+	//	pos.y = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
+	//	pos.z = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
+	//	//X,Y,Z全て[-5.0f,+5.0f]でランダムに分布
+	//	const float rnd_vel = 0.1f;
+	//	XMFLOAT3 vel{};
+	//	vel.x = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+	//	vel.y = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+	//	vel.z = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+	//	//重力に見立ててYのみ[-0.001f,0]でランダムに分布
+	//	XMFLOAT3 acc{};
+	//	const float rnd_acc = 0.001f;
+	//	acc.y = -(float)rand() / RAND_MAX * rnd_acc;
 
-	//ビルボード行列を掛ける
-	//matWorld *= matBillbordY;
-
-	//matWorld *= matScale; // ワールド行列にスケーリングを反映
-	//matWorld *= matRot; // ワールド行列に回転を反映
-	//matWorld *= matTrans; // ワールド行列に平行移動を反映
-
-	// 親オブジェクトがあれば
-	//if (parent != nullptr) {
-	//	// 親オブジェクトのワールド行列を掛ける
-	//	matWorld *= parent->matWorld;
+	//	//追加
+	//	particleMan->Add(60, pos, vel, acc);
 	//}
+
+	//寿命が尽きたパーティクルを全削除
+	particles.remove_if(
+		[](Particle& x) {
+			return x.frame >= x.num_frame;
+		}
+	);
+
+	//全パーティクル更新
+	for (std::forward_list<Particle>::iterator it = particles.begin();
+		it != particles.end();
+		it++) {
+		//経過フレーム数をカウント
+		it->frame++;
+		//速度に加速度を加算
+		it->velocity = it->velocity + it->accel;
+		//速度による移動
+		it->position = it->position + it->velocity;
+	}
+
+	//頂点バッファへデータ転送
+	VertexPos* vertMap = nullptr;
+	result = vertBuff->Map(0, nullptr, (void**)&vertMap);
+	if (SUCCEEDED(result)) {
+		//パーティクルの情報を1つずつ反映
+		for (std::forward_list<Particle>::iterator it = particles.begin();
+			it != particles.end();
+			it++) {
+			//座標
+			vertMap->pos = it->position;
+			//次の頂点へ
+			vertMap++;
+		}
+		vertBuff->Unmap(0, nullptr);
+
+	}
 
 	// 定数バッファへデータ転送
 	ConstBufferData* constMap = nullptr;
 	result = constBuff->Map(0, nullptr, (void**)&constMap);
-	//constMap->color = color;
 	constMap->mat = matView * matProjection;	// 行列の合成
 	constMap->matBillboard = matBillboard;
 	constBuff->Unmap(0, nullptr);
@@ -689,5 +719,19 @@ void ParticleManager::Draw()
 	cmdList->SetGraphicsRootDescriptorTable(1, gpuDescHandleSRV);
 	// 描画コマンド
 	//cmdList->DrawIndexedInstanced(3, 1, 0, 0, 0);
-	cmdList->DrawInstanced(_countof(vertices), 1, 0, 0);
+	//cmdList->DrawInstanced(_countof(vertices), 1, 0, 0);
+	cmdList->DrawInstanced((UINT)std::distance(particles.begin(), particles.end()), 1, 0, 0);
+}
+
+void ParticleManager::Add(int life, XMFLOAT3 position, XMFLOAT3 velocity, XMFLOAT3 accel)
+{
+	//リストに要素を追加
+	particles.emplace_front();
+	//追加した要素の参照
+	Particle& p = particles.front();
+	//値のリセット
+	p.position = position;
+	p.velocity = velocity;
+	p.accel = accel;
+	p.num_frame = life;
 }
