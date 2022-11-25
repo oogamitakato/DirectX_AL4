@@ -275,10 +275,24 @@ void ParticleManager::InitializeGraphicsPipeline()
 	// 頂点レイアウト
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
 		{ // xy座標(1行で書いたほうが見やすい)
-			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
+			"POSITION",
+			0,
+			DXGI_FORMAT_R32G32B32_FLOAT,
+			0,
 			D3D12_APPEND_ALIGNED_ELEMENT,
-			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+			0
 		},
+		{//スケール
+			"TEXCOORD",
+			0,
+			DXGI_FORMAT_R32G32B32_FLOAT,
+			0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+			0
+		}
+
 		//{ // 法線ベクトル(1行で書いたほうが見やすい)
 		//	"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
 		//	D3D12_APPEND_ALIGNED_ELEMENT,
@@ -631,29 +645,6 @@ void ParticleManager::Update()
 	HRESULT result;
 	XMMATRIX matScale, matRot, matTrans;
 
-
-	//for (int i = 0; i < 100; i++) {
-	//	//X,Y,Z全て[-5.0f,+5.0f]でランダムに分布
-	//	const float rnd_width = 10.0f;
-	//	XMFLOAT3 pos{};
-	//	pos.x = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
-	//	pos.y = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
-	//	pos.z = (float)rand() / RAND_MAX * rnd_width - rnd_width / 2.0f;
-	//	//X,Y,Z全て[-5.0f,+5.0f]でランダムに分布
-	//	const float rnd_vel = 0.1f;
-	//	XMFLOAT3 vel{};
-	//	vel.x = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
-	//	vel.y = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
-	//	vel.z = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
-	//	//重力に見立ててYのみ[-0.001f,0]でランダムに分布
-	//	XMFLOAT3 acc{};
-	//	const float rnd_acc = 0.001f;
-	//	acc.y = -(float)rand() / RAND_MAX * rnd_acc;
-
-	//	//追加
-	//	particleMan->Add(60, pos, vel, acc);
-	//}
-
 	//寿命が尽きたパーティクルを全削除
 	particles.remove_if(
 		[](Particle& x) {
@@ -671,6 +662,11 @@ void ParticleManager::Update()
 		it->velocity = it->velocity + it->accel;
 		//速度による移動
 		it->position = it->position + it->velocity;
+		//進行度を0～1の範囲に換算
+		float f = (float)it->frame / it->num_frame;
+		//スケールの線形補間
+		it->scale = (it->e_scale - it->s_scale) * f;
+		it->scale += it->s_scale;
 	}
 
 	//頂点バッファへデータ転送
@@ -685,9 +681,11 @@ void ParticleManager::Update()
 			vertMap->pos = it->position;
 			//次の頂点へ
 			vertMap++;
+
+			//スケール
+			vertMap->scale = it->scale;
 		}
 		vertBuff->Unmap(0, nullptr);
-
 	}
 
 	// 定数バッファへデータ転送
@@ -723,8 +721,10 @@ void ParticleManager::Draw()
 	cmdList->DrawInstanced((UINT)std::distance(particles.begin(), particles.end()), 1, 0, 0);
 }
 
-void ParticleManager::Add(int life, XMFLOAT3 position, XMFLOAT3 velocity, XMFLOAT3 accel)
+void ParticleManager::Add(int life, XMFLOAT3 position, XMFLOAT3 velocity, XMFLOAT3 accel,
+	float start_scale, float end_scale)
 {
+
 	//リストに要素を追加
 	particles.emplace_front();
 	//追加した要素の参照
@@ -734,4 +734,7 @@ void ParticleManager::Add(int life, XMFLOAT3 position, XMFLOAT3 velocity, XMFLOA
 	p.velocity = velocity;
 	p.accel = accel;
 	p.num_frame = life;
+	p.s_scale = start_scale;
+	p.e_scale = end_scale;
+	p.scale = p.s_scale;
 }
