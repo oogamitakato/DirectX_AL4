@@ -35,6 +35,7 @@ public: // サブクラス
 	{
 		XMFLOAT3 pos;//xyz座標
 		float scale; //スケール
+		XMFLOAT4 color;//色
 	};
 
 	// 定数バッファ用データ構造体
@@ -66,6 +67,8 @@ public: // サブクラス
 		float s_scale = 1.0f;
 		//最終値
 		float e_scale = 0.0f;
+		//色
+		XMFLOAT4 color = {};
 	};
 
 private: // 定数
@@ -237,7 +240,7 @@ public: // メンバ関数
 	/// <param name="velocity">速度</param>
 	/// <param name="accel">加速度</param>
 	void Add(int life, XMFLOAT3 position, XMFLOAT3 velocity, XMFLOAT3 accel,
-		float start_scale, float end_scale);
+		float start_scale, float end_scale, XMFLOAT4 color);
 
 	/// <summary>
 	/// 座標の取得

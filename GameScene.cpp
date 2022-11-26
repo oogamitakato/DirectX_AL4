@@ -57,7 +57,7 @@ void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
 
 void GameScene::Update()
 {
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < 1; i++) {
 		//X,Y,Z全てランダムに分布
 		const float rnd_width = 10.0f;
 		XMFLOAT3 pos{};
@@ -74,9 +74,15 @@ void GameScene::Update()
 		XMFLOAT3 acc{};
 		const float rnd_acc = 0.01f;
 		acc.y = -(float)rand() / RAND_MAX * rnd_acc;
+		//色をランダムに分布
+		XMFLOAT4 col{};
+		col.w = (float)rand() / RAND_MAX * 255;
+		col.x = (float)rand() / RAND_MAX * 255;
+		col.y = (float)rand() / RAND_MAX * 255;
+		col.z = (float)rand() / RAND_MAX * 255;
 
 		//追加
-		particleMan->Add(60, pos, vel, acc, 1.0f, 0.0f);
+		particleMan->Add(60, pos, vel, acc, 2.0f, 0.0f, col);
 	}
 
 
@@ -125,7 +131,7 @@ void GameScene::Draw()
 	// 背景スプライト描画前処理
 	Sprite::PreDraw(cmdList);
 	// 背景スプライト描画
-	//spriteBG->Draw();
+	spriteBG->Draw();
 
 	/// <summary>
 	/// ここに背景スプライトの描画処理を追加できる

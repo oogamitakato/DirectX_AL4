@@ -291,6 +291,15 @@ void ParticleManager::InitializeGraphicsPipeline()
 			D3D12_APPEND_ALIGNED_ELEMENT,
 			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
 			0
+		},
+		{//色
+			"COLOR",
+			0,
+			DXGI_FORMAT_R32G32B32_FLOAT,
+			0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+			0
 		}
 
 		//{ // 法線ベクトル(1行で書いたほうが見やすい)
@@ -684,6 +693,8 @@ void ParticleManager::Update()
 
 			//スケール
 			vertMap->scale = it->scale;
+			//色
+			vertMap->color = it->color;
 		}
 		vertBuff->Unmap(0, nullptr);
 	}
@@ -722,7 +733,7 @@ void ParticleManager::Draw()
 }
 
 void ParticleManager::Add(int life, XMFLOAT3 position, XMFLOAT3 velocity, XMFLOAT3 accel,
-	float start_scale, float end_scale)
+	float start_scale, float end_scale, XMFLOAT4 color)
 {
 
 	//リストに要素を追加
@@ -730,6 +741,7 @@ void ParticleManager::Add(int life, XMFLOAT3 position, XMFLOAT3 velocity, XMFLOA
 	//追加した要素の参照
 	Particle& p = particles.front();
 	//値のリセット
+	p.color = color;
 	p.position = position;
 	p.velocity = velocity;
 	p.accel = accel;

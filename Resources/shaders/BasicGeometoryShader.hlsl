@@ -30,6 +30,9 @@ void main(
 {
 	GSOutput element;
 
+	//F‚ğ•Ï‚¦‚é
+	element.color = input[0].color;
+
 	//vnum“_•ª‰ñ‚·
 	for (uint i = 0; i < vnum; i++) {
 		float4 offset;
