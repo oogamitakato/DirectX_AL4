@@ -573,7 +573,7 @@ void Object3d::LoadMaterial(const std::string& directoryPath, const std::string&
 }
 
 // テクスチャ読み込み
-void Object3d::LoadTexture(const std::string& directoryPath, const std::string& filename)
+bool Object3d::LoadTexture(const std::string& directoryPath, const std::string& filename)
 {
 	HRESULT result = S_FALSE;
 
@@ -652,7 +652,7 @@ void Object3d::LoadTexture(const std::string& directoryPath, const std::string& 
 		cpuDescHandleSRV
 	);
 
-	//return result;
+	return result;
 }
 
 bool Object3d::Initialize()
@@ -663,7 +663,8 @@ bool Object3d::Initialize()
 	assert(device);
 
 	// ヒーププロパティ
-	CD3DX12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	CD3DX12_HEAP_PROPERTIES heapProps =
+		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	// リソース設定
 	CD3DX12_RESOURCE_DESC resourceDesc =
 		CD3DX12_RESOURCE_DESC::Buffer((sizeof(ConstBufferDataB0) + 0xff) & ~0xff);
@@ -678,13 +679,14 @@ bool Object3d::Initialize()
 		IID_PPV_ARGS(&constBuffB0));
 	assert(SUCCEEDED(result));
 
-	resourceDesc = CD3DX12_RESOURCE_DESC::Buffer((sizeof(ConstBufferDataB1) + 0xff) & ~0xff);
+	CD3DX12_RESOURCE_DESC resourceDesc2 =
+		CD3DX12_RESOURCE_DESC::Buffer((sizeof(ConstBufferDataB1) + 0xff) & ~0xff);
 
 	// 定数バッファの生成
 	result = device->CreateCommittedResource(
 		&heapProps, // アップロード可能
 		D3D12_HEAP_FLAG_NONE,
-		&resourceDesc,
+		&resourceDesc2,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&constBuffB1));
