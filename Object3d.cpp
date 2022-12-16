@@ -101,7 +101,7 @@ Object3d* Object3d::Create()
 	}
 
 	//スケールをセット
-	float scale_val = 20.0f;
+	float scale_val = 10.0f;
 	object3d->scale = { scale_val, scale_val, scale_val };
 
 	return object3d;
