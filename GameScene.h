@@ -6,6 +6,7 @@
 #include "Sprite.h"
 #include "Object3d.h"
 #include "DebugText.h"
+#include "CollisionPrimitive.h"
 
 /// <summary>
 /// ゲームシーン
@@ -64,6 +65,13 @@ private: // メンバ変数
 	/// </summary>
 	Sprite* spriteBG = nullptr;
 	Object3d* object3d = nullptr;
+
+	//当たり判定 球
+	Sphere sphere;
+	//当たり判定 平面
+	Plane plane;
+	//当たり判定 三角形
+	Triangle triangle;
 };
 
 template<class T>

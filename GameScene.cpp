@@ -1,5 +1,8 @@
 ﻿#include "GameScene.h"
+#include "Collision.h"
 #include <cassert>
+#include <sstream>
+#include <iomanip>
 
 using namespace DirectX;
 
@@ -43,34 +46,48 @@ void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
 	// 3Dオブジェクト生成
 	object3d = Object3d::Create();
 	object3d->Update();
+
+	//球の初期値を設定
+	sphere.center = XMVectorSet(0, 2, 0, 1);
+	sphere.radius = 1.0f;
+
+	//平面の初期値を設定
+	plane.normal = XMVectorSet(0, 1, 0, 0);
+	plane.distance = 0.0f;
+
+	//三角形の初期化を設定
+	triangle.p0 = XMVectorSet(-1.0f, 0, -1.0f, 1);
+	triangle.p1 = XMVectorSet(-1.0f, 0, +1.0f, 1);
+	triangle.p2 = XMVectorSet(+1.0f, 0, -1.0f, 1);
+	triangle.normal = XMVectorSet(0.0f, 1.0f, 0.0f, 0);
 }
 
 void GameScene::Update()
 {
 	// オブジェクト移動
-	if (input->PushKey(DIK_UP) || input->PushKey(DIK_DOWN) || input->PushKey(DIK_RIGHT) || input->PushKey(DIK_LEFT))
-	{
-		// 現在の座標を取得
-		XMFLOAT3 position = object3d->GetPosition();
+	//if (input->PushKey(DIK_UP) || input->PushKey(DIK_DOWN) || input->PushKey(DIK_RIGHT) || input->PushKey(DIK_LEFT))
+	//{
+	//	// 現在の座標を取得
+	//	XMFLOAT3 position = object3d->GetPosition();
 
-		// 移動後の座標を計算
-		if (input->PushKey(DIK_UP)) { position.y += 1.0f; }
-		else if (input->PushKey(DIK_DOWN)) { position.y -= 1.0f; }
-		if (input->PushKey(DIK_RIGHT)) { position.x += 1.0f; }
-		else if (input->PushKey(DIK_LEFT)) { position.x -= 1.0f; }
+	//	// 移動後の座標を計算
+	//	if (input->PushKey(DIK_UP)) { position.y += 1.0f; }
+	//	else if (input->PushKey(DIK_DOWN)) { position.y -= 1.0f; }
+	//	if (input->PushKey(DIK_RIGHT)) { position.x += 1.0f; }
+	//	else if (input->PushKey(DIK_LEFT)) { position.x -= 1.0f; }
 
-		// 座標の変更を反映
-		object3d->SetPosition(position);
-	}
+	//	// 座標の変更を反映
+	//	object3d->SetPosition(position);
+	//}
 
 	// カメラ移動
-	if (input->PushKey(DIK_W) || input->PushKey(DIK_S) || input->PushKey(DIK_D) || input->PushKey(DIK_A))
-	{
-		if (input->PushKey(DIK_W)) { Object3d::CameraMoveEyeVector({ 0.0f,+1.0f,0.0f }); }
-		else if (input->PushKey(DIK_S)) { Object3d::CameraMoveEyeVector({ 0.0f,-1.0f,0.0f }); }
-		if (input->PushKey(DIK_D)) { Object3d::CameraMoveEyeVector({ +1.0f,0.0f,0.0f }); }
-		else if (input->PushKey(DIK_A)) { Object3d::CameraMoveEyeVector({ -1.0f,0.0f,0.0f }); }
-	}
+	//if (input->PushKey(DIK_W) || input->PushKey(DIK_S) || input->PushKey(DIK_D) || input->PushKey(DIK_A))
+	//{
+	//	if (input->PushKey(DIK_W)) { Object3d::CameraMoveEyeVector({ 0.0f,+1.0f,0.0f }); }
+	//	else if (input->PushKey(DIK_S)) { Object3d::CameraMoveEyeVector({ 0.0f,-1.0f,0.0f }); }
+	//	if (input->PushKey(DIK_D)) { Object3d::CameraMoveEyeVector({ +1.0f,0.0f,0.0f }); }
+	//	else if (input->PushKey(DIK_A)) { Object3d::CameraMoveEyeVector({ -1.0f,0.0f,0.0f }); }
+	//}
 
 	//スプライト移動
 	if (input->PushKey(DIK_SPACE)) {
@@ -83,6 +100,43 @@ void GameScene::Update()
 	}
 
 	object3d->Update();
+
+	//球移動
+	XMVECTOR moveY = XMVectorSet(0, 0.1f, 0, 0);
+	XMVECTOR moveX = XMVectorSet(0.1f, 0, 0, 0);
+	if (input->PushKey(DIK_W)) { sphere.center += moveY; }
+	if (input->PushKey(DIK_S)) { sphere.center -= moveY; }
+	if (input->PushKey(DIK_D)) { sphere.center += moveX; }
+	if (input->PushKey(DIK_A)) { sphere.center -= moveX; }
+
+	//球と平面の当たり判定
+	XMVECTOR inter;
+	bool hit = Collision::CheckSphere2Triangle(sphere, triangle, &inter);
+	if (hit) {
+		debugText.Print("Hit", 50, 200, 1.0f);
+	}
+
+	//stringstreamで変数の値を埋め込んで整形する
+	std::ostringstream spherestr;
+	spherestr << "Sphere:("
+		<< std::fixed << std::setprecision(2)
+		<< sphere.center.m128_f32[0] << ","
+		<< sphere.center.m128_f32[1] << ","
+		<< sphere.center.m128_f32[2] << ")";
+
+	debugText.Print(spherestr.str(), 50, 180, 1.0f);
+
+	// 座標の変更を反映
+	object3d->SetPosition({
+			sphere.center.m128_f32[0],
+			sphere.center.m128_f32[1],
+			sphere.center.m128_f32[2],
+		});
+	object3d->SetScale({
+		sphere.radius,
+		sphere.radius,
+		sphere.radius,
+		});
 }
 
 void GameScene::Draw()
