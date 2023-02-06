@@ -16,6 +16,7 @@ GameScene::~GameScene()
 	safe_delete(sprite1);
 	safe_delete(sprite2);
 	safe_delete(object3d);
+	safe_delete(model);
 }
 
 void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
@@ -43,8 +44,19 @@ void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
 
 	// 背景スプライト生成
 	spriteBG = Sprite::Create(1, { 0.0f,0.0f });
+
+	//モデル読み込み
+	model = Model::LoadFromOBJ("sphere");
+	
 	// 3Dオブジェクト生成
 	object3d = Object3d::Create();
+	object3d->Initialize();
+	object3d->SetModel(model);
+	object3d->SetScale({
+		sphere.radius,
+		sphere.radius,
+		sphere.radius,
+		});
 	object3d->Update();
 
 	//球の初期値を設定
@@ -64,30 +76,6 @@ void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
 
 void GameScene::Update()
 {
-	// オブジェクト移動
-	//if (input->PushKey(DIK_UP) || input->PushKey(DIK_DOWN) || input->PushKey(DIK_RIGHT) || input->PushKey(DIK_LEFT))
-	//{
-	//	// 現在の座標を取得
-	//	XMFLOAT3 position = object3d->GetPosition();
-
-	//	// 移動後の座標を計算
-	//	if (input->PushKey(DIK_UP)) { position.y += 1.0f; }
-	//	else if (input->PushKey(DIK_DOWN)) { position.y -= 1.0f; }
-	//	if (input->PushKey(DIK_RIGHT)) { position.x += 1.0f; }
-	//	else if (input->PushKey(DIK_LEFT)) { position.x -= 1.0f; }
-
-	//	// 座標の変更を反映
-	//	object3d->SetPosition(position);
-	//}
-
-	// カメラ移動
-	//if (input->PushKey(DIK_W) || input->PushKey(DIK_S) || input->PushKey(DIK_D) || input->PushKey(DIK_A))
-	//{
-	//	if (input->PushKey(DIK_W)) { Object3d::CameraMoveEyeVector({ 0.0f,+1.0f,0.0f }); }
-	//	else if (input->PushKey(DIK_S)) { Object3d::CameraMoveEyeVector({ 0.0f,-1.0f,0.0f }); }
-	//	if (input->PushKey(DIK_D)) { Object3d::CameraMoveEyeVector({ +1.0f,0.0f,0.0f }); }
-	//	else if (input->PushKey(DIK_A)) { Object3d::CameraMoveEyeVector({ -1.0f,0.0f,0.0f }); }
-	//}
 
 	//スプライト移動
 	if (input->PushKey(DIK_SPACE)) {
@@ -99,7 +87,6 @@ void GameScene::Update()
 		sprite1->SetPosition(position);
 	}
 
-	object3d->Update();
 
 	//球移動
 	XMVECTOR moveY = XMVectorSet(0, 0.1f, 0, 0);
@@ -132,11 +119,8 @@ void GameScene::Update()
 			sphere.center.m128_f32[1],
 			sphere.center.m128_f32[2],
 		});
-	object3d->SetScale({
-		sphere.radius,
-		sphere.radius,
-		sphere.radius,
-		});
+
+	object3d->Update();
 }
 
 void GameScene::Draw()
