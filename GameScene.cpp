@@ -16,7 +16,10 @@ GameScene::~GameScene()
 	safe_delete(sprite1);
 	safe_delete(sprite2);
 	safe_delete(object3d);
+	safe_delete(object3d2);
 	safe_delete(model);
+	safe_delete(model2);
+	safe_delete(model3);
 }
 
 void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
@@ -47,11 +50,16 @@ void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
 
 	//モデル読み込み
 	model = Model::LoadFromOBJ("sphere");
+	model2 = Model::LoadFromOBJ("sphere2");
+	model3 = Model::LoadFromOBJ("triangle_mat");
 	
 	// 3Dオブジェクト生成
 	object3d = Object3d::Create();
+	object3d2 = Object3d::Create();
 	object3d->Initialize();
+	object3d2->Initialize();
 	object3d->SetModel(model);
+	object3d2->SetModel(model3);
 	object3d->SetScale({
 		sphere.radius,
 		sphere.radius,
@@ -68,9 +76,9 @@ void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
 	plane.distance = 0.0f;
 
 	//三角形の初期化を設定
-	triangle.p0 = XMVectorSet(-1.0f, 0, -1.0f, 1);
-	triangle.p1 = XMVectorSet(-1.0f, 0, +1.0f, 1);
-	triangle.p2 = XMVectorSet(+1.0f, 0, -1.0f, 1);
+	triangle.p0 = XMVectorSet(-2.0f, 0, -2.0f, 1);
+	triangle.p1 = XMVectorSet(-2.0f, 2.00, +2.0f, 1);
+	triangle.p2 = XMVectorSet(+2.0f, 0, -2.0f, 1);
 	triangle.normal = XMVectorSet(0.0f, 1.0f, 0.0f, 0);
 }
 
@@ -101,6 +109,10 @@ void GameScene::Update()
 	bool hit = Collision::CheckSphere2Triangle(sphere, triangle, &inter);
 	if (hit) {
 		debugText.Print("Hit", 50, 200, 1.0f);
+		object3d->SetModel(model2);
+	}
+	else {
+		object3d->SetModel(model);
 	}
 
 	//stringstreamで変数の値を埋め込んで整形する
@@ -120,7 +132,9 @@ void GameScene::Update()
 			sphere.center.m128_f32[2],
 		});
 
+	object3d2->SetScale({ 1.0f,1.0f,1.0f });
 	object3d->Update();
+	object3d2->Update();
 }
 
 void GameScene::Draw()
@@ -150,6 +164,7 @@ void GameScene::Draw()
 
 	// 3Dオブクジェクトの描画
 	object3d->Draw();
+	object3d2->Draw();
 
 	/// <summary>
 	/// ここに3Dオブジェクトの描画処理を追加できる
