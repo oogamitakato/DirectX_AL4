@@ -13,14 +13,14 @@ using namespace Microsoft::WRL;
 const float ParticleManager::radius = 5.0f;				// 底面の半径
 const float ParticleManager::prizmHeight = 8.0f;			// 柱の高さ
 ID3D12Device* ParticleManager::device = nullptr;
-UINT ParticleManager::descriptorHandleIncrementSize = 0;
+UINT ParticleManager::descriptorHandleIncrementSize;
 ID3D12GraphicsCommandList* ParticleManager::cmdList = nullptr;
 ComPtr<ID3D12RootSignature> ParticleManager::rootsignature;
 ComPtr<ID3D12PipelineState> ParticleManager::pipelinestate;
 ComPtr<ID3D12DescriptorHeap> ParticleManager::descHeap;
 ComPtr<ID3D12Resource> ParticleManager::vertBuff;
 ComPtr<ID3D12Resource> ParticleManager::indexBuff;
-ComPtr<ID3D12Resource> ParticleManager::texbuff;
+ComPtr<ID3D12Resource> ParticleManager::texbuff[2];
 CD3DX12_CPU_DESCRIPTOR_HANDLE ParticleManager::cpuDescHandleSRV;
 CD3DX12_GPU_DESCRIPTOR_HANDLE ParticleManager::gpuDescHandleSRV;
 XMMATRIX ParticleManager::matView{};
@@ -62,9 +62,6 @@ void ParticleManager::StaticInitialize(ID3D12Device * device, int window_width, 
 	// パイプライン初期化
 	InitializeGraphicsPipeline();
 
-	// テクスチャ読み込み
-	LoadTexture();
-
 	// モデル生成
 	CreateModel();
 
@@ -92,7 +89,7 @@ void ParticleManager::PostDraw()
 	ParticleManager::cmdList = nullptr;
 }
 
-ParticleManager* ParticleManager::Create()
+ParticleManager* ParticleManager::Create(UINT texnumber, const wchar_t* texture_name)
 {
 	// 3Dオブジェクトのインスタンスを生成
 	ParticleManager* object3d = new ParticleManager();
@@ -101,7 +98,7 @@ ParticleManager* ParticleManager::Create()
 	}
 
 	// 初期化
-	if (!object3d->Initialize()) {
+	if (!object3d->Initialize(texnumber, texture_name)) {
 		delete object3d;
 		assert(0);
 		return nullptr;
@@ -391,7 +388,7 @@ void ParticleManager::InitializeGraphicsPipeline()
 
 }
 
-void ParticleManager::LoadTexture()
+void ParticleManager::LoadTexture(UINT texnumber, const wchar_t* texture_name)
 {
 	HRESULT result = S_FALSE;
 
@@ -399,7 +396,7 @@ void ParticleManager::LoadTexture()
 	ScratchImage scratchImg{};
 
 	// WICテクスチャのロード
-	result = LoadFromWICFile( L"Resources/effect1.png", WIC_FLAGS_NONE, &metadata, scratchImg);
+	result = LoadFromWICFile(texture_name, WIC_FLAGS_NONE, &metadata, scratchImg);
 	assert(SUCCEEDED(result));
 
 	ScratchImage mipChain{};
@@ -428,13 +425,13 @@ void ParticleManager::LoadTexture()
 	result = device->CreateCommittedResource(
 		&heapProps, D3D12_HEAP_FLAG_NONE, &texresDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ, // テクスチャ用指定
-		nullptr, IID_PPV_ARGS(&texbuff));
+		nullptr, IID_PPV_ARGS(&texbuff[texnumber]));
 	assert(SUCCEEDED(result));
 
 	// テクスチャバッファにデータ転送
 	for (size_t i = 0; i < metadata.mipLevels; i++) {
 		const Image* img = scratchImg.GetImage(i, 0, 0); // 生データ抽出
-		result = texbuff->WriteToSubresource(
+		result = texbuff[texnumber]->WriteToSubresource(
 			(UINT)i,
 			nullptr,              // 全領域へコピー
 			img->pixels,          // 元データアドレス
@@ -449,14 +446,14 @@ void ParticleManager::LoadTexture()
 	gpuDescHandleSRV = CD3DX12_GPU_DESCRIPTOR_HANDLE(descHeap->GetGPUDescriptorHandleForHeapStart(), 0, descriptorHandleIncrementSize);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{}; // 設定構造体
-	D3D12_RESOURCE_DESC resDesc = texbuff->GetDesc();
+	D3D12_RESOURCE_DESC resDesc = texbuff[texnumber]->GetDesc();
 
 	srvDesc.Format = resDesc.Format;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
 	srvDesc.Texture2D.MipLevels = 1;
 
-	device->CreateShaderResourceView(texbuff.Get(), //ビューと関連付けるバッファ
+	device->CreateShaderResourceView(texbuff[texnumber].Get(), //ビューと関連付けるバッファ
 		&srvDesc, //テクスチャ設定情報
 		cpuDescHandleSRV
 	);
@@ -617,7 +614,7 @@ void ParticleManager::UpdateViewMatrix()
 #pragma endregion
 }
 
-bool ParticleManager::Initialize()
+bool ParticleManager::Initialize(UINT texnumber, const wchar_t* texture_name)
 {
 	// nullptrチェック
 	assert(device);
@@ -636,6 +633,9 @@ bool ParticleManager::Initialize()
 		D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
 		IID_PPV_ARGS(&constBuff));
 	assert(SUCCEEDED(result));
+	
+	// テクスチャ読み込み
+	LoadTexture(texnumber, texture_name);
 
 	return true;
 }

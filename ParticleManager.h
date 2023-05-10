@@ -100,7 +100,7 @@ public: // 静的メンバ関数
 	/// 3Dオブジェクト生成
 	/// </summary>
 	/// <returns></returns>
-	static ParticleManager* Create();
+	static ParticleManager* Create(UINT texnumber, const wchar_t* texture_name);
 
 	/// <summary>
 	/// 視点座標の取得
@@ -155,7 +155,7 @@ private: // 静的メンバ変数
 	// インデックスバッファ
 	static ComPtr<ID3D12Resource> indexBuff;
 	// テクスチャバッファ
-	static ComPtr<ID3D12Resource> texbuff;
+	static ComPtr<ID3D12Resource> texbuff[2];
 	// シェーダリソースビューのハンドル(CPU)
 	static CD3DX12_CPU_DESCRIPTOR_HANDLE cpuDescHandleSRV;
 	// シェーダリソースビューのハンドル(CPU)
@@ -202,10 +202,6 @@ private:// 静的メンバ関数
 	/// <returns>成否</returns>
 	static void InitializeGraphicsPipeline();
 
-	/// <summary>
-	/// テクスチャ読み込み
-	/// </summary>
-	static void LoadTexture();
 
 	/// <summary>
 	/// モデル作成
@@ -218,7 +214,7 @@ private:// 静的メンバ関数
 	static void UpdateViewMatrix();
 
 public: // メンバ関数
-	bool Initialize();
+	bool Initialize(UINT texnumber, const wchar_t* texture_name);
 	/// <summary>
 	/// 毎フレーム処理
 	/// </summary>
@@ -228,6 +224,12 @@ public: // メンバ関数
 	/// 描画
 	/// </summary>
 	void Draw();
+
+	/// <summary>
+	/// テクスチャ読み込み
+	/// </summary>
+	static void LoadTexture(UINT texnumber, const wchar_t* texture_name);
+
 
 	/// <summary>
 	/// パーティクルの追加

@@ -62,6 +62,7 @@ private: // メンバ変数
 	/// </summary>
 	Sprite* spriteBG = nullptr;
 	ParticleManager* particleMan = nullptr;
+	ParticleManager* particleMan2 = nullptr;
 	//ParticleManager* object3d[grassCount];
 };
 

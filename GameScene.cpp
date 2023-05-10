@@ -37,7 +37,7 @@ void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
 
 	// テクスチャ読み込み
 	Sprite::LoadTexture(1, L"Resources/background.png");
-
+	ParticleManager::LoadTexture(0, L"Resources/effect1.png");
 	// 背景スプライト生成
 	spriteBG = Sprite::Create(1, { 0.0f,0.0f });
 	// 3Dオブジェクト生成
@@ -51,8 +51,10 @@ void GameScene::Initialize(DirectXCommon* dxCommon, Input* input)
 		//object3d[i]->Update();
 	}
 
-	particleMan = ParticleManager::Create();
+	particleMan = ParticleManager::Create(0, L"Resources/effect1.png");
+	particleMan2 = ParticleManager::Create(1, L"Resources/effect2.png");
 	particleMan->Update();
+	//particleMan2->Update();
 }
 
 void GameScene::Update()
@@ -77,6 +79,7 @@ void GameScene::Update()
 
 		//追加
 		particleMan->Add(60, pos, vel, acc, 1.0f, 0.0f);
+		//particleMan2->Add(60, {0.0f,-5.0f,0.0f}, vel, acc, 1.0f, 0.0f);
 	}
 
 
@@ -114,6 +117,7 @@ void GameScene::Update()
 	}
 
 	particleMan->Update();
+	//particleMan2->Update();
 }
 
 void GameScene::Draw()
@@ -148,6 +152,7 @@ void GameScene::Draw()
 	}
 
 	particleMan->Draw();
+	//particleMan2->Draw();
 
 	/// <summary>
 	/// ここに3Dオブジェクトの描画処理を追加できる
